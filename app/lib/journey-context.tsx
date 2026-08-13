@@ -1,14 +1,15 @@
 "use client";
 
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import type { PreferenceId, VibeId } from "./meeting-options";
 
 export interface MeetingDetails {
   date: string;
   time: string;
   location: string;
   message: string;
-  vibe: string;
-  preferences: string[];
+  vibe: VibeId;
+  preferences: PreferenceId[];
 }
 
 interface JourneyState {

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { FaHeart, FaCalendarCheck } from "react-icons/fa6";
 import Link from "next/link";
 import { useJourney } from "../lib/journey-context";
+import { useLanguage } from "../lib/i18n/language-context";
 
 const CONFETTI = Array.from({ length: 14 }, (_, i) => ({
   left: `${(i * 7.3) % 100}%`,
@@ -14,26 +15,27 @@ const CONFETTI = Array.from({ length: 14 }, (_, i) => ({
   drift: i % 2 === 0 ? 40 : -40,
 }));
 
-function formatDate(iso: string) {
+function formatDate(iso: string, localeTag: string) {
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y, m - 1, d);
-  return date.toLocaleDateString(undefined, {
+  return date.toLocaleDateString(localeTag, {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
 }
 
-function formatTime(value: string) {
+function formatTime(value: string, localeTag: string) {
   const [h, m] = value.split(":").map(Number);
   const date = new Date();
   date.setHours(h, m);
-  return date.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+  return date.toLocaleTimeString(localeTag, { hour: "numeric", minute: "2-digit" });
 }
 
 export default function ConfirmationScreen() {
   const router = useRouter();
   const { details, reset } = useJourney();
+  const { t, localeTag } = useLanguage();
 
   useEffect(() => {
     if (!details) {
@@ -74,18 +76,21 @@ export default function ConfirmationScreen() {
         </motion.div>
 
         <h1 className="mb-3 font-display text-3xl italic text-gradient sm:text-4xl">
-          It&apos;s on its way
+          {t.confirmation.title}
         </h1>
         <p className="mb-8 text-sm" style={{ color: "var(--ink-soft)" }}>
-          Your invitation has been sent. Here&apos;s what you shared:
+          {t.confirmation.subtitle}
         </p>
 
         <dl className="mb-10 grid grid-cols-1 gap-3 text-left text-sm sm:grid-cols-2">
-          <Detail label="Date" value={formatDate(details.date)} />
-          <Detail label="Time" value={formatTime(details.time)} />
-          <Detail label="Location" value={details.location} className="sm:col-span-2" />
-          <Detail label="Vibe" value={details.vibe} />
-          <Detail label="Preferences" value={details.preferences.join(", ")} />
+          <Detail label={t.confirmation.dateLabel} value={formatDate(details.date, localeTag)} />
+          <Detail label={t.confirmation.timeLabel} value={formatTime(details.time, localeTag)} />
+          <Detail label={t.confirmation.locationLabel} value={details.location} className="sm:col-span-2" />
+          <Detail label={t.confirmation.vibeLabel} value={t.details.vibeOptions[details.vibe]} />
+          <Detail
+            label={t.confirmation.preferencesLabel}
+            value={details.preferences.map((id) => t.details.preferenceOptions[id]).join(", ")}
+          />
         </dl>
 
         <Link
@@ -93,7 +98,7 @@ export default function ConfirmationScreen() {
           onClick={reset}
           className="btn-ghost inline-flex rounded-full px-6 py-3 text-sm font-medium"
         >
-          Send another invitation
+          {t.confirmation.resendLink}
         </Link>
       </motion.div>
     </main>
@@ -114,7 +119,7 @@ function Detail({
       <dt className="text-xs uppercase tracking-[0.2em]" style={{ color: "var(--gold)" }}>
         {label}
       </dt>
-      <dd className="mt-1 capitalize" style={{ color: "var(--ink)" }}>
+      <dd className="mt-1" style={{ color: "var(--ink)" }}>
         {value}
       </dd>
     </div>

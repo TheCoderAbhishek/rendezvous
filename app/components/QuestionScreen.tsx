@@ -6,23 +6,27 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaHeart, FaHeartCircleCheck } from "react-icons/fa6";
 import Logo from "./Logo";
 import { useJourney } from "../lib/journey-context";
+import { useLanguage } from "../lib/i18n/language-context";
 
-const DODGE_MESSAGES = [
-  "It slipped away again…",
-  "So close, and yet so far.",
-  "That one's camera-shy.",
-  "Try the other button — it's kinder.",
-  "It really doesn't want to be picked.",
-  "Playing hard to get, are we?",
-];
+const BURST_HEARTS = Array.from({ length: 10 }, (_, i) => {
+  const angle = (i / 10) * Math.PI * 2;
+  return {
+    dx: Math.cos(angle) * (60 + (i % 3) * 20),
+    dy: Math.sin(angle) * (60 + (i % 3) * 20),
+    size: 10 + (i % 3) * 4,
+    delay: i * 0.02,
+  };
+});
 
 export default function QuestionScreen() {
   const router = useRouter();
   const { markAccepted } = useJourney();
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const [noPos, setNoPos] = useState({ x: 0, y: 0 });
   const [attempts, setAttempts] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
+  const [bursting, setBursting] = useState(false);
   const [accepted, setAccepted] = useState(false);
 
   const dodge = useCallback(() => {
@@ -35,12 +39,14 @@ export default function QuestionScreen() {
     const nextY = Math.random() * maxY - maxY / 2;
     setNoPos({ x: nextX, y: nextY });
     setAttempts((a) => a + 1);
-    setMessage(DODGE_MESSAGES[Math.floor(Math.random() * DODGE_MESSAGES.length)]);
-  }, []);
+    const pool = t.question.dodgeMessages;
+    setMessage(pool[Math.floor(Math.random() * pool.length)]);
+  }, [t]);
 
   const handleYes = useCallback(() => {
-    setAccepted(true);
+    setBursting(true);
     markAccepted();
+    window.setTimeout(() => setAccepted(true), 420);
     window.setTimeout(() => router.push("/details"), 900);
   }, [markAccepted, router]);
 
@@ -60,46 +66,82 @@ export default function QuestionScreen() {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.5 }}
             >
-              <p className="mb-3 text-sm uppercase tracking-[0.3em] text-ink-soft" style={{ color: "var(--ink-soft)" }}>
-                A quiet question
+              <p className="mb-3 text-sm uppercase tracking-[0.3em]" style={{ color: "var(--ink-soft)" }}>
+                {t.question.eyebrow}
               </p>
               <h1 className="font-display text-4xl sm:text-5xl md:text-6xl italic leading-tight text-gradient mb-6">
-                Would you like to meet?
+                {t.question.title}
               </h1>
               <p className="mx-auto mb-14 max-w-md text-base leading-7" style={{ color: "var(--ink-soft)" }}>
-                No pressure, no small talk required — just a simple yes,
-                whenever you&apos;re ready.
+                {t.question.subtitle}
               </p>
 
               <div
                 ref={containerRef}
                 className="relative mx-auto flex h-40 w-full max-w-sm items-center justify-center gap-6 sm:h-28"
               >
-                <motion.button
-                  type="button"
-                  onClick={handleYes}
-                  animate={{ scale: yesScale }}
-                  whileHover={{ scale: yesScale * 1.05 }}
-                  whileTap={{ scale: yesScale * 0.96 }}
-                  transition={{ type: "spring", stiffness: 260, damping: 18 }}
-                  className="btn-primary z-10 rounded-full px-10 py-4 font-semibold tracking-wide cursor-pointer"
-                >
-                  Yes
-                </motion.button>
+                <div className="relative z-10">
+                  <motion.button
+                    type="button"
+                    onClick={handleYes}
+                    animate={{ scale: yesScale }}
+                    whileHover={{ scale: yesScale * 1.06 }}
+                    whileTap={{ scale: yesScale * 0.94 }}
+                    transition={{ type: "spring", stiffness: 260, damping: 18 }}
+                    className="btn-primary relative rounded-full px-10 py-4 font-semibold tracking-wide cursor-pointer"
+                    style={{
+                      boxShadow: `0 12px ${18 + attempts * 4}px -8px var(--ring)`,
+                    }}
+                  >
+                    <motion.span
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-full"
+                      style={{ background: "var(--rose)", opacity: 0.5 }}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                      transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                    <span className="relative">{t.question.yes}</span>
+                  </motion.button>
+
+                  <AnimatePresence>
+                    {bursting &&
+                      BURST_HEARTS.map((h, i) => (
+                        <motion.span
+                          key={i}
+                          className="pointer-events-none absolute left-1/2 top-1/2"
+                          style={{ color: "var(--rose)" }}
+                          initial={{ x: 0, y: 0, opacity: 1, scale: 0.4 }}
+                          animate={{ x: h.dx, y: h.dy, opacity: 0, scale: 1.1 }}
+                          transition={{ duration: 0.9, delay: h.delay, ease: "easeOut" }}
+                        >
+                          <FaHeart size={h.size} aria-hidden="true" />
+                        </motion.span>
+                      ))}
+                  </AnimatePresence>
+                </div>
 
                 <motion.button
                   type="button"
-                  aria-label="No (this one likes to wander)"
+                  aria-label={t.question.noAria}
                   onPointerEnter={dodge}
                   onClick={(e) => {
                     e.preventDefault();
                     dodge();
                   }}
-                  animate={{ x: noPos.x, y: noPos.y }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  animate={{
+                    x: noPos.x,
+                    y: noPos.y,
+                    rotate: attempts % 2 === 0 ? [0, -10, 8, -4, 0] : [0, 10, -8, 4, 0],
+                  }}
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 20 },
+                    y: { type: "spring", stiffness: 300, damping: 20 },
+                    rotate: { duration: 0.45, ease: "easeOut" },
+                  }}
+                  whileHover={{ scale: 0.94 }}
                   className="btn-ghost rounded-full px-10 py-4 font-semibold tracking-wide cursor-pointer"
                 >
-                  No
+                  {t.question.no}
                 </motion.button>
               </div>
 
@@ -135,22 +177,20 @@ export default function QuestionScreen() {
                 <FaHeartCircleCheck className="text-5xl" style={{ color: "var(--rose)" }} />
               </motion.div>
               <h2 className="font-display text-3xl italic text-gradient">
-                Wonderful.
+                {t.question.acceptedTitle}
               </h2>
-              <p style={{ color: "var(--ink-soft)" }}>
-                Let&apos;s find the perfect time and place…
-              </p>
+              <p style={{ color: "var(--ink-soft)" }}>{t.question.acceptedSubtitle}</p>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <FloatingHint attempts={attempts} />
+      <FloatingHint attempts={attempts} hint={t.question.hint} />
     </main>
   );
 }
 
-function FloatingHint({ attempts }: { attempts: number }) {
+function FloatingHint({ attempts, hint }: { attempts: number; hint: string }) {
   if (attempts < 3) return null;
   return (
     <motion.p
@@ -159,7 +199,7 @@ function FloatingHint({ attempts }: { attempts: number }) {
       className="mt-10 flex items-center gap-2 text-xs uppercase tracking-[0.25em]"
       style={{ color: "var(--gold)" }}
     >
-      <FaHeart aria-hidden="true" /> the yes button is right there
+      <FaHeart aria-hidden="true" /> {hint}
     </motion.p>
   );
 }

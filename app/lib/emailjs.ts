@@ -1,5 +1,6 @@
 import emailjs from "@emailjs/browser";
 import type { MeetingDetails } from "./journey-context";
+import { PREFERENCE_LABELS_EN, VIBE_LABELS_EN } from "./meeting-options";
 
 const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
 const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID;
@@ -24,8 +25,10 @@ export async function sendMeetingRequest(details: MeetingDetails) {
       time: details.time,
       location: details.location,
       message: details.message || "No message added.",
-      vibe: details.vibe,
-      preferences: details.preferences.join(", ") || "No preference selected",
+      vibe: VIBE_LABELS_EN[details.vibe] ?? details.vibe,
+      preferences:
+        details.preferences.map((id) => PREFERENCE_LABELS_EN[id] ?? id).join(", ") ||
+        "No preference selected",
     },
     { publicKey: PUBLIC_KEY }
   );

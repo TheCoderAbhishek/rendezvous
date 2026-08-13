@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import { JourneyProvider } from "./lib/journey-context";
+import { THEME_INIT_SCRIPT } from "./lib/theme-context";
 import HeartField from "./components/HeartField";
+import SiteHeader from "./components/SiteHeader";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair",
@@ -40,11 +42,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${playfair.variable} ${inter.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <JourneyProvider>
           <HeartField />
+          <SiteHeader />
           {children}
         </JourneyProvider>
       </body>

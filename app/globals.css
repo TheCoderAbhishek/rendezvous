@@ -29,8 +29,24 @@
   --font-body: var(--font-body);
 }
 
+.dark {
+  --bg: #1a1013;
+  --bg-soft: #24151a;
+  --surface: #2a171d;
+  --ink: #f7e9ec;
+  --ink-soft: #d8b4bd;
+  --rose: #e78ba0;
+  --rose-deep: #f3aebb;
+  --blush: #4a2530;
+  --gold: #e6cf9e;
+  --gold-soft: #f0e0b8;
+  --ring: rgba(231, 139, 160, 0.35);
+}
+
+/* No-JS / pre-hydration fallback only — the inline script in <head> normally
+   applies .light or .dark before paint, which always wins over this. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.light):not(.dark) {
     --bg: #1a1013;
     --bg-soft: #24151a;
     --surface: #2a171d;
@@ -53,6 +69,11 @@ html {
   scroll-behavior: smooth;
 }
 
+html,
+body {
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
 body {
   background: radial-gradient(
       120% 120% at 15% 0%,
@@ -63,6 +84,14 @@ body {
   color: var(--ink);
   font-family: var(--font-body), system-ui, sans-serif;
   min-height: 100vh;
+}
+
+.glass,
+.btn-primary,
+.btn-ghost,
+.field {
+  transition: background-color 0.4s ease, color 0.4s ease,
+    border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .font-display {
