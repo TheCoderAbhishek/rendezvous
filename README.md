@@ -1,4 +1,19 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Rendezvous is a fully client-side, romantic invitation experience built with Next.js, React, Tailwind CSS, and EmailJS.
+
+## EmailJS setup
+
+The invite is sent directly from the browser using [EmailJS](https://www.emailjs.com/) — no backend involved.
+
+1. Create an EmailJS account, an email service, and a template with `date`, `time`, `location`, `message`, `vibe`, and `preferences` variables.
+2. Copy `.env.example` to `.env.local` and fill in your Service ID, Template ID, and Public Key:
+
+   ```bash
+   NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_service_id
+   NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_template_id
+   NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_public_key
+   ```
+
+3. Restart the dev server so the new environment variables are picked up.
 
 ## Getting Started
 
